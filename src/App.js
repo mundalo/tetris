@@ -2,26 +2,22 @@
 //<img src={logo} className="App-logo" alt="logo" />
 /*
 <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+  className="App-link"
+  href="https://reactjs.org"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Learn React
+</a>
 */
 import './App.css';
+import ReactDOM from 'react-dom/client';
+import Game from './classes/Game.js'
+// classes Player, Piece and Game classes
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Hello world
-        </p>
-      </header>
-    </div>
-  );
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<Game color="blue"/>);
 }
 
 export default App;
