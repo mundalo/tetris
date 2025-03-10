@@ -11,13 +11,11 @@
 </a>
 */
 import './App.css';
-import ReactDOM from 'react-dom/client';
 import Game from './classes/Game.js'
 // classes Player, Piece and Game classes
 
 function App() {
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<Game color="blue" game="Start"/>);
+  return <Game color="blue" game="Start"/>;
 }
 
 export default App;

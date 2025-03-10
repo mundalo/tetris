@@ -9,8 +9,8 @@ class Game extends React.Component {
     }
 
     startGame = () => {
-        console.log("start game!");
         const button = document.getElementById("start_btn");
+
         if (this.state.game === "Start" || this.state.game === "Resume") {
             button.innerHTML = "Pause";
             this.setState({game: "Pause"});
@@ -24,7 +24,6 @@ class Game extends React.Component {
     };
 
     render() {
-        //return <h2>I am a {this.state.color} Car!</h2>
         return (
             <div className="App">
                 <header className="App-header">
