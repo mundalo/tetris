@@ -17,7 +17,7 @@ import Game from './classes/Game.js'
 
 function App() {
   const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<Game color="blue"/>);
+  root.render(<Game color="blue" game="Start"/>);
 }
 
 export default App;

@@ -1,0 +1,18 @@
+.grid-container {
+    display: grid;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(10, 1fr);
+    width: 200px;
+    height: 200px;
+    margin: 10px 50px;
+}
+
+.grid-item {
+    background-color: #686868;
+    border: 1px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
