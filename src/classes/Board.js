@@ -24,6 +24,36 @@ class Board extends React.Component {
             </div>
         );
     }
+    /*render() {
+        return (
+            <Tetris>
+                {({
+                    Gameboard,
+                    PieceQueue,
+                    points,
+                    linesCleared,
+                    state,
+                    controller
+                }) => (
+                    <div>
+                        <h2>Player: {this.state.player}</h2>
+                        <div>
+                            <p>Points: {points}</p>
+                            <p>Lines Cleared: {linesCleared}</p>
+                        </div>
+                        <PieceQueue />
+                        <Gameboard />
+                        {state === 'LOST' && (
+                            <div>
+                                <h2>Game Over</h2>
+                                <button onClick={controller.restart}>New game</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Tetris>
+        );
+    }*/
 }
 
 export default Board;

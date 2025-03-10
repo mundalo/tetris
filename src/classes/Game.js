@@ -31,7 +31,19 @@ class Game extends React.Component {
                 </header>
                 <div className="board">
                     <h1>Tetris</h1>
-                    <h2>I am a {this.state.color} Car!</h2>
+                    <h2>Keyboard controls</h2>
+                    <li>
+                        <ul>down key: move a piece to the bottom faster</ul>
+                        <ul>left key: move piece left</ul>
+                        <ul>right key: move piece right</ul>
+                        <ul>space bar: drop piece to the bottom</ul>
+                        <ul>z: flip piece counter-clockwise</ul>
+                        <ul>x: flip piece clockwise</ul>
+                        <ul>up: flip piece clockwise</ul>
+                        <ul>p: toggle pause</ul>
+                        <ul>c: hold</ul>
+                        <ul>shift: hold</ul>
+                    </li>
                     <button id="start_btn" onClick={this.startGame}>Start</button>
                     <div className="grid-parent-container"> 
                         <Board player="1"/>
