@@ -15,7 +15,7 @@ import Game from './classes/Game.js'
 // classes Player, Piece and Game classes
 
 function App() {
-  return <Game color="blue" game="Start"/>;
+  return <Game color="blue" game="Start" players="2"/>;
 }
 
 export default App;
