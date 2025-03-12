@@ -1,12 +1,17 @@
 import React from 'react';
 
 class Controls extends React.Component {
+    keyboardControls = () => {
+        const tableStyle = {
+            marginLeft: "auto",
+            marginRight: "auto",
+            "border": "1px solid black",
+        };
 
-    render() {
         return (
             <div>
                 <h2>Keyboard controls</h2>
-                <table>
+                <table style={tableStyle}>
                     <thead>
                         <tr>
                             <th>Key</th>
@@ -37,6 +42,13 @@ class Controls extends React.Component {
                     </tbody>
                 </table>
             </div>
+        );
+    };
+    
+
+    render() {
+        return (
+            this.keyboardControls()
         );
     }
 }

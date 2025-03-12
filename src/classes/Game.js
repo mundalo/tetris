@@ -1,73 +1,82 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Player from './Player';
 import Controls from './Controls';
-import { QueueProvider } from './PieceQueue';
+//import { useQueueContext } from './PieceQueue';
 
-class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {color: props.color, game: props.game, players: props.players};
+export const Game = () => {
+    //const { getPiece } = useQueueContext();
+    const [gameState, setGameState] = useState("Start");
+    var players = 2;
+
+    const putPiece = (piece, x, y, grid) => {
+        let j = 0;
+        for (let i = 0; i < piece.length; i++) {
+            if (piece[i] === 1) {
+                grid[j].style.backgroundColor = "blue";
+            }
+            j++;
+        }
+        for (let j = 0; j < grid.length; j++) {
+            //grid[j].style.backgroundColor = "blue";
+            //if (j % 2 === 0) {
+            //    grid[j].className = grid[j].className + " blocked";
+                //console.log("contains: " + grid[j].classList.contains("blocked"));
+            //} else {
+                //grid[j].style.backgroundColor = "blue";
+                //console.log("contains: " + grid[j].classList.contains("blocked"));
+            //}
+            
+        }
     }
 
-    startGame = () => {
-        this.updateStateText("Pause")
+    const startGame = () => {
+        updateStateText("Pause")
 
-        for (let i = 1; i <= Number(this.state.players); i++) {
+        for (let i = 1; i <= players; i++) {
             const container = document.getElementsByClassName("container-of-player-" + i);
+            console.log("player-grid-" + i);
+            const player = document.getElementsByClassName("player-grid-" + i);
+            const currentPiece = player[0].getAttribute("piece_index");
+            console.log("player: ", player[0].getAttribute("piece_index"), player[0].getAttribute("player"));
+            // getPiece()
             if (container[0]) {
                 const grid = container[0].getElementsByClassName("grid-item");
-                for (let j = 0; j < grid.length; j++) {
-                    //grid[j].style.backgroundColor = "blue";
-                    if (j % 2 === 0) {
-                        grid[j].className = grid[j].className + " blocked";
-                        console.log("contains: " + grid[j].classList.contains("blocked"));
-                    } else {
-                        grid[j].style.backgroundColor = "blue";
-                        console.log("contains: " + grid[j].classList.contains("blocked"));
-                    }
-                    
-                }
+                putPiece(currentPiece[0], 0, 0, grid);
             }
         }
     }
 
-    updateStateText = (state) => {
+    const updateStateText = (state) => {
         const button = document.getElementById("state_btn");
 
         button.innerHTML = state;
-        this.setState({game: state});
+        setGameState(state);
     }
 
-    changeGameState = () => {
-        if (this.state.game === "Start" || this.state.game === "Resume") {
-            this.startGame();
-        } else if (this.state.game === "Pause") {
-            this.updateStateText("Resume");
-        } else if (this.state.game === "End") {
-            this.updateStateText("Start");
+    const changeGameState = () => {    
+        if (gameState === "Start" || gameState === "Resume") {
+            startGame();
+        } else if (gameState === "Pause") {
+            updateStateText("Resume");
+        } else if (gameState === "End") {
+            updateStateText("Start");
         }
     };
 
-    render() {
-        return (
-            <div className="App">
-                <header className="App-header">
-                    <p>Tetris</p>
-                </header>
-                <div className="board">
-                    <h1>Tetris</h1>
-                    <Controls />
-                    <button id="state_btn" onClick={this.changeGameState}>Start</button>
-                    <QueueProvider>
-                        <div className="grid-parent-container"> 
-                            <Player player="1"/>
-                            <Player player="2"/>
-                        </div>
-                    </QueueProvider>
+    return (
+        <div className="App">
+            <header className="App-header">
+                <p>Tetris</p>
+            </header>
+            <div className="board">
+                <h1>Tetris</h1>
+                <Controls />
+                <button id="state_btn" onClick={changeGameState}>Start</button>
+                <div className="grid-parent-container"> 
+                    <Player player="1" />
+                    <Player player="2" />
                 </div>
             </div>
-        );
-    } 
+        </div>
+    );
 }
-
-export default Game;

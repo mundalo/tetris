@@ -11,11 +11,17 @@
 </a>
 */
 import './App.css';
-import Game from './classes/Game.js'
+import { Game } from './classes/Game.js'
+import { QueueProvider } from './classes/PieceQueue';
+
 // classes Player, Piece and Game classes
 
 function App() {
-  return <Game color="blue" game="Start" players="2"/>;
+  return (
+    <QueueProvider>
+      <Game/>
+    </QueueProvider>
+  );
 }
 
 export default App;
