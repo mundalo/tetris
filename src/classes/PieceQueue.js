@@ -11,7 +11,6 @@ export const QueueProvider = ({ children }) => {
 
     const getPiece = (i) => {
         if (i >= 0 && i < queue.length) {
-            console.log("return piece", queue[i], "length: ", queue.length);
             return queue[i];
         }
         setSize(i + size);
