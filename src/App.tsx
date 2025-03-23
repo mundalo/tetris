@@ -11,7 +11,7 @@
 </a>
 */
 import './App.css';
-import { Game } from './classes/Game.js'
+import { Game } from './classes/Game'
 import { QueueProvider } from './classes/PieceQueue';
 
 // classes Player, Piece and Game classes
