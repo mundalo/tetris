@@ -45,7 +45,10 @@ const DefaultWrapper = () => {
 const GameWrapper = () => {
   const {room, playerName } = useParams<{ room: string, playerName: string }>();
   const [players, setPlayers] = useState<string[]>([]);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [startPlayer, setStartPlayer] = useState<string>(null);
+  //const [gameStarted, setGameStarted] = useState(false);
+  const [buttonText, setButtonText] = useState('Start Game');
+  const [gameState, setGameState] = useState('Start');
 
   useEffect(() => {
     if (!room || !playerName) {
@@ -59,27 +62,41 @@ const GameWrapper = () => {
     const handleRoomInfo = (data: { players: string[], startPlayer: string }) => {
       console.log("received room-info", data);
       setPlayers(data.players);
+      setStartPlayer(data.startPlayer);
     }
     
-    const handleGameStarted = () => {
-      setGameStarted(true);
+    const handleGameStarted = (state) => {
+      setButtonText(state === "Start" ? "Pause Game" : "Start Game");
+      setGameState(state === "Start" ? "Pause" : "Start");
     }
 
     socketServiceInstance.socket?.on('room-info', handleRoomInfo);
 
     socketServiceInstance.socket?.on('game-started', handleGameStarted);
 
-    return () => {
-      console.log("Cleaning up socket connection...");
+    const handleBeforeUnload = () => {
       socketServiceInstance.emit('player-disconnect', { room, playerName });
       socketServiceInstance.socket?.off('room-info', handleRoomInfo);
       socketServiceInstance.socket?.off('game-started', handleGameStarted);
+      socketServiceInstance.socket?.disconnect();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      console.log("Cleaning up socket connection...");
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       socketServiceInstance.disconnect();
     };
   }, [room, playerName]);
 
-  const handleStartGame = () => {
-    socketServiceInstance.emit('start-game', { room, playerName });
+  const handleGameState = () => {
+    //socketServiceInstance.emit('start-game', { gameStarted, room, playerName });
+    
+    if (playerName === startPlayer) {
+      setButtonText(gameState === "Start" ? "Pause Game" : "Start Game");
+      setGameState(gameState === "Start" ? "Pause" : "Start");  
+    }
   };
 
   const handleLeaveGame = () => {
@@ -102,13 +119,13 @@ const GameWrapper = () => {
           <li key={player}>{player}</li>
         ))}
       </ul>
-      <button onClick={handleStartGame} disabled={gameStarted}>
-        Start Game
+      <button id="state_btn" onClick={handleGameState}>
+        {buttonText}
       </button>
       <button onClick={handleLeaveGame}>
         Leave Game
       </button>
-      <Game room={room} playerName={playerName} />
+      <Game gameState={gameState} room={room} playerName={playerName} />
     </div>)
 }
 

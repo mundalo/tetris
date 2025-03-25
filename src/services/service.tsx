@@ -18,8 +18,8 @@ class SocketService {
         console.log("Room info: ", data);
     });
 
-    this.socket.on('game-started', () => {
-        console.log("Game started!");
+    this.socket.on('game-started', (state) => {
+        console.log("Game started ", state);
     });
 
     this.socket.on('error', (message) => {

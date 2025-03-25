@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { /*useState,*/ useEffect } from 'react';
 import Player from './Player';
-import Controls from './Controls';
 import { useQueueContext } from './PieceQueue';
 import { getPieceColor } from './Piece';
-import SocketService from '../services/socket';
+//import socketServiceInstance from '../services/service';
 
 interface GameProps {
+    gameState: string;
     playerName: string;
     room: string;
 }
 
-export const Game: React.FC<GameProps> = ({ playerName, room }) => {
+export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
     const { getPiece } = useQueueContext();
-    const [gameState, setGameState] = useState<string>("Start");
-    var players = 2;
+    //var players = 2;
     var rotate = 0;
     enum Piece_indx {
         coordinates,
@@ -21,12 +20,30 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
     };
 
     useEffect(() => {
-        SocketService.connect(room, playerName);
+        /*const updateStateText = (state) => {
+            const button = document.getElementById("state_btn");
+            button.innerHTML = state;
+        }
+        
+        console.log(`GameStarted updated to: ${gameStarted}`);
+        const button = document.getElementById("state_btn");
+        if (gameStarted === true) {
+            if (button.innerHTML === "Start Game" || button.innerHTML === "Resume") {
+                updateStateText("Pause");
+            }
+        } else if (gameStarted === false) {
+            if (button.innerHTML !== "Start Game") {
+                updateStateText("Resume");
+            }
+        } *//*else if (gameStarted === true) {
+            updateStateText("Start");
+        }*/
+        /*socketServiceInstance.connect(room, playerName);
 
         return () => {
-            SocketService.disconnect();
-        };
-    }, [room, playerName]);
+            socketServiceInstance.disconnect();
+        };*/
+    }, [gameState, room, playerName]);
 
     const isPieceWithinBoundary = (piece, x, y, grid) => {
         let n = 10 - 4;
@@ -95,7 +112,7 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
         putPiece(currentPiece[rotate], color, x, y, grid);
     }
 
-    const setPieceAsBlocked = (currentPiece, x, y, grid) => {
+    /*const setPieceAsBlocked = (currentPiece, x, y, grid) => {
         let n = 10 - 4;
         let k = x + (y * 10);
 
@@ -109,7 +126,7 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
             k += n;
         }
     }
-
+*/
     const movePiece = (i, moveX = 0) => {
         const container = document.getElementsByClassName("container-of-player-" + i);
         const player = document.getElementsByClassName("player-grid-" + i);
@@ -139,8 +156,8 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
         }
     }
 
-    const startGame = () => {
-        SocketService.emit('start-game', { playerName });
+    /*const startGame = () => {
+        //socketServiceInstance.emit('start-game', { playerName });
         updateStateText("Pause")
 
         for (let i = 1; i <= players; i++) {
@@ -162,24 +179,7 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
                 }
             }
         }
-    }
-
-    const updateStateText = (state) => {
-        const button = document.getElementById("state_btn");
-
-        button.innerHTML = state;
-        setGameState(state);
-    }
-
-    const changeGameState = () => {    
-        if (gameState === "Start" || gameState === "Resume") {
-            startGame();
-        } else if (gameState === "Pause") {
-            updateStateText("Resume");
-        } else if (gameState === "End") {
-            updateStateText("Start");
-        }
-    };
+    }*/
 
     const handleKeyPress = (e) => {
         console.log( "You pressed a key: ", e.keyCode );
@@ -204,13 +204,7 @@ export const Game: React.FC<GameProps> = ({ playerName, room }) => {
 
     return (
         <div className="App" onKeyDown={(e) => handleKeyPress(e)} tabIndex={0}>
-            <header className="App-header">
-                <p>Tetris Game - Room {room} </p>
-            </header>
             <div className="board">
-                <Controls />
-                <h1>Player {playerName}</h1>
-                <button id="state_btn" onClick={changeGameState}>Start</button>
                 <div className="grid-parent-container"> 
                     <Player player={playerName} />
                 </div>

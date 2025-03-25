@@ -57,11 +57,11 @@ io.on('connection', (socket) => {
         console.log(`${playerName} joined room ${room}`);
     });
 
-    socket.on('start-game', ({ room, playerName }) => {
+    socket.on('start-game', ({ state, room, playerName }) => {
         const startPlayer = rooms[room]?.startPlayer;
         if (startPlayer === playerName) {
-            console.log("Game started in room: ", room);
-            io.to(room).emit('game-started');
+            console.log("Game state changed to ", state, "  in room: ", room);
+            io.to(room).emit('game-started', state);
         } else {
             socket.emit('error', 'Only the first player can start the game');
         }
