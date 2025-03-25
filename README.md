@@ -15,6 +15,11 @@ A terrain consists of 10 columns and 20 lines. Each player can graphically obser
     Down arrow: Fall towards the pile
     Spacebar: Vertical move to position a piece in a hole in the pile
 
+## How to run
+
+npm run build
+npm start
+
 -----
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
