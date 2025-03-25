@@ -57,9 +57,9 @@ io.on('connection', (socket) => {
         console.log(`${playerName} joined room ${room}`);
     });
 
-    socket.on('start-game', (room) => {
+    socket.on('start-game', ({ room, playerName }) => {
         const startPlayer = rooms[room]?.startPlayer;
-        if (startPlayer && socket.id === startPlayer) {
+        if (startPlayer === playerName) {
             console.log("Game started in room: ", room);
             io.to(room).emit('game-started');
         } else {
@@ -67,8 +67,36 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('player-disconnect', ({ room, playerName }) => {
+        console.log("player-disconnect ", playerName, "disconnect from room", room);
+        
+        if (rooms[room]?.players?.includes(playerName)) {
+            console.log("Removing player from room:", playerName);
+            console.log("old room: ", rooms[room]);
+            rooms[room].players = rooms[room].players.filter(player => player != playerName);
+            if (rooms[room].startPlayer === playerName) {
+                console.log("players length: ", rooms[room].players.length);
+                if (rooms[room].players.length > 0) {
+                    rooms[room].startPlayer = rooms[room].players[0];
+                    console.log("new startPlayer selected");
+                } else {
+                    rooms[room].startPlayer = null;
+                }
+            }
+            console.log("new room: ", rooms[room]);
+            io.to(room).emit('room-info', {
+                players: rooms[room].players,
+                startPlayer: rooms[room].startPlayer
+            });
+            console.log(`${playerName} left room ${room}.`);
+        } else {
+            console.log(`${playerName} not found in room ${room}`);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('a user disconnected', socket.id);
+        
     });
 });
 

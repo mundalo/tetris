@@ -44,7 +44,6 @@ const DefaultWrapper = () => {
 
 const GameWrapper = () => {
   const {room, playerName } = useParams<{ room: string, playerName: string }>();
-  const [startPlayer, setStartPlayer] = useState<string | null>(null);
   const [players, setPlayers] = useState<string[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
 
@@ -60,7 +59,6 @@ const GameWrapper = () => {
     const handleRoomInfo = (data: { players: string[], startPlayer: string }) => {
       console.log("received room-info", data);
       setPlayers(data.players);
-      setStartPlayer(data.startPlayer);
     }
     
     const handleGameStarted = () => {
@@ -73,6 +71,7 @@ const GameWrapper = () => {
 
     return () => {
       console.log("Cleaning up socket connection...");
+      socketServiceInstance.emit('player-disconnect', { room, playerName });
       socketServiceInstance.socket?.off('room-info', handleRoomInfo);
       socketServiceInstance.socket?.off('game-started', handleGameStarted);
       socketServiceInstance.disconnect();
@@ -80,11 +79,12 @@ const GameWrapper = () => {
   }, [room, playerName]);
 
   const handleStartGame = () => {
-    if (startPlayer === playerName) {
-      socketServiceInstance.emit('start-game', room);
-    } else {
-      alert("Only the first player can start the game.");
-    }
+    socketServiceInstance.emit('start-game', { room, playerName });
+  };
+
+  const handleLeaveGame = () => {
+      socketServiceInstance.emit('player-disconnect', { room, playerName });
+      socketServiceInstance.disconnect();
   };
 
   if (!room || !playerName) {
@@ -93,6 +93,9 @@ const GameWrapper = () => {
 
   return (
     <div>
+      <header className="App-header">
+          <p>Tetris Game - Room {room} </p>
+      </header>
       <p>Players in room: </p>
       <ul>
         {players.map((player) => (
@@ -101,6 +104,9 @@ const GameWrapper = () => {
       </ul>
       <button onClick={handleStartGame} disabled={gameStarted}>
         Start Game
+      </button>
+      <button onClick={handleLeaveGame}>
+        Leave Game
       </button>
       <Game room={room} playerName={playerName} />
     </div>)

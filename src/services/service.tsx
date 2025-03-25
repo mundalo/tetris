@@ -12,8 +12,7 @@ class SocketService {
       console.log(`Socket connected with ID: ${this.socket?.id}`);
       this.socket?.emit('join-room', { room: room, playerName: playerName });
       console.log(`Emitting join-room for room: ${room}, player: ${playerName}`);
-    
-    })
+    });
 
     this.socket.on('room-info', (data) => {
         console.log("Room info: ", data);
@@ -29,9 +28,7 @@ class SocketService {
     });
 
     this.socket.on("connect_error", (err) => {
-      // the reason of the error, for example "xhr poll error"
       console.log("socket connection error: ", err);
-  
     });
   }
 
