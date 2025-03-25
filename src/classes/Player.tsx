@@ -2,11 +2,11 @@ import React from 'react';
 import BoardGrid from './BoardGrid';
 
 interface PlayerProps {
-    player: number;
+    player: string;
 }
 
 interface PlayerState {
-    player: number;
+    player: string;
 }
 
 class Player extends React.Component<PlayerProps, PlayerState> {

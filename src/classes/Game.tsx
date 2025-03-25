@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Player from './Player';
 import Controls from './Controls';
 import { useQueueContext } from './PieceQueue';
 import { getPieceColor } from './Piece';
+import SocketService from '../services/socket';
 
-export const Game = () => {
+interface GameProps {
+    playerName: string;
+    room: string;
+}
+
+export const Game: React.FC<GameProps> = ({ playerName, room }) => {
     const { getPiece } = useQueueContext();
     const [gameState, setGameState] = useState<string>("Start");
     var players = 2;
@@ -13,6 +19,14 @@ export const Game = () => {
         coordinates,
         nbr
     };
+
+    useEffect(() => {
+        SocketService.connect(room, playerName);
+
+        return () => {
+            SocketService.disconnect();
+        };
+    }, [room, playerName]);
 
     const isPieceWithinBoundary = (piece, x, y, grid) => {
         let n = 10 - 4;
@@ -115,25 +129,38 @@ export const Game = () => {
                 console.log("piece is within boundary put piece x", x, "y ", y);
                 replacePiece(currentPiece, color, x, y, grid);
                 // needs to be set into a timer that changes each second player[0].setAttribute("y", y + 1);
+                return true;
             } else {
                 // if player reached bottom of board (cannot move further down change active piece of player)
-                if (true) {
-                    setPieceAsBlocked(currentPiece, x, y, grid);
-                    const newPieceIndex = pieceIndex + 1
-                    player[0].setAttribute("piece_index", String(newPieceIndex));
-                }
+                return false;
                     
     
-                console.log("piece is not within boundary, do not put piece");
             }
         }
     }
 
     const startGame = () => {
+        SocketService.emit('start-game', { playerName });
         updateStateText("Pause")
 
         for (let i = 1; i <= players; i++) {
-            movePiece(i);
+            if (!movePiece(i)) {
+                console.log("could not move piece further down. Sets the piece as blocked and picks new piece for player");
+                const container = document.getElementsByClassName("container-of-player-" + i);
+                const player = document.getElementsByClassName("player-grid-" + i);
+                const pieceIndex = Number(player[0].getAttribute("piece_index"));
+                const piece = getPiece(pieceIndex);
+                const currentPiece = piece.tetrimino;
+                if (container[0]) {
+                    const grid = container[0].getElementsByClassName("grid-item");
+                    const x = Number(player[0].getAttribute("data-x"));
+                    const y = Number(player[0].getAttribute("data-y"));
+                    console.log("x: ", x, "y: ", y);
+                    setPieceAsBlocked(currentPiece, x, y, grid);
+                    const newPieceIndex = pieceIndex + 1
+                    player[0].setAttribute("piece_index", String(newPieceIndex));
+                }
+            }
         }
     }
 
@@ -178,15 +205,14 @@ export const Game = () => {
     return (
         <div className="App" onKeyDown={(e) => handleKeyPress(e)} tabIndex={0}>
             <header className="App-header">
-                <p>Tetris</p>
+                <p>Tetris Game - Room {room} </p>
             </header>
             <div className="board">
-                <h1>Tetris</h1>
                 <Controls />
+                <h1>Player {playerName}</h1>
                 <button id="state_btn" onClick={changeGameState}>Start</button>
                 <div className="grid-parent-container"> 
-                    <Player player={1} />
-                    <Player player={2} />
+                    <Player player={playerName} />
                 </div>
             </div>
         </div>

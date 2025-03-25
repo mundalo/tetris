@@ -2,11 +2,11 @@ import React from 'react';
 import './BoardGrid.css'; // Import the CSS for styling
 
 interface BoardGridProps {
-    player: number;
+    player: string;
 }
 
 interface BoardGridState {
-    player: number;
+    player: string;
 }
 
 class BoardGrid extends React.Component<BoardGridProps, BoardGridState> {
