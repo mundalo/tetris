@@ -57,11 +57,11 @@ io.on('connection', (socket) => {
         console.log(`${playerName} joined room ${room}`);
     });
 
-    socket.on('start-game', ({ state, room, playerName }) => {
+    socket.on('start-game', ({ gameState, room, playerName }) => {
         const startPlayer = rooms[room]?.startPlayer;
         if (startPlayer === playerName) {
-            console.log("Game state changed to ", state, "  in room: ", room);
-            io.to(room).emit('game-started', state);
+            console.log("Game state changed to ", gameState, "  in room: ", room);
+            io.to(room).emit('game-started', gameState);
         } else {
             socket.emit('error', 'Only the first player can start the game');
         }
@@ -72,18 +72,15 @@ io.on('connection', (socket) => {
         
         if (rooms[room]?.players?.includes(playerName)) {
             console.log("Removing player from room:", playerName);
-            console.log("old room: ", rooms[room]);
             rooms[room].players = rooms[room].players.filter(player => player != playerName);
             if (rooms[room].startPlayer === playerName) {
-                console.log("players length: ", rooms[room].players.length);
                 if (rooms[room].players.length > 0) {
                     rooms[room].startPlayer = rooms[room].players[0];
-                    console.log("new startPlayer selected");
                 } else {
                     rooms[room].startPlayer = null;
                 }
             }
-            console.log("new room: ", rooms[room]);
+
             io.to(room).emit('room-info', {
                 players: rooms[room].players,
                 startPlayer: rooms[room].startPlayer

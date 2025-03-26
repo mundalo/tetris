@@ -90,11 +90,11 @@ const GameWrapper = () => {
   }, [room, playerName]);
 
   const handleGameState = () => {
-    socketServiceInstance.emit('start-game', { gameState, room, playerName });
-    
+    console.log("Handle Game State, ", gameState, "request from ", playerName, "only startPlayer can do this: ", startPlayer);
     if (playerName === startPlayer) {
       setButtonText(gameState === "Start" ? "Pause Game" : "Start Game");
-      setGameState(gameState === "Start" ? "Pause" : "Start");  
+      setGameState(gameState === "Start" ? "Pause" : "Start");
+      socketServiceInstance.emit('start-game', { gameState, room, playerName });
     }
   };
 
