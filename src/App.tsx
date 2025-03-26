@@ -46,7 +46,6 @@ const GameWrapper = () => {
   const {room, playerName } = useParams<{ room: string, playerName: string }>();
   const [players, setPlayers] = useState<string[]>([]);
   const [startPlayer, setStartPlayer] = useState<string>(null);
-  //const [gameStarted, setGameStarted] = useState(false);
   const [buttonText, setButtonText] = useState('Start Game');
   const [gameState, setGameState] = useState('Start');
 
@@ -91,7 +90,7 @@ const GameWrapper = () => {
   }, [room, playerName]);
 
   const handleGameState = () => {
-    //socketServiceInstance.emit('start-game', { gameStarted, room, playerName });
+    socketServiceInstance.emit('start-game', { gameState, room, playerName });
     
     if (playerName === startPlayer) {
       setButtonText(gameState === "Start" ? "Pause Game" : "Start Game");

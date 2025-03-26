@@ -19,7 +19,7 @@ class Player extends React.Component<PlayerProps, PlayerState> {
         const name = "player-grid-" + this.state.player;
 
         return (
-            <div className={name} data-player={this.state.player} piece-index={0} data-x={4} data-y={0}>
+            <div className={name} data-player={this.state.player}>
                 <BoardGrid player={this.state.player}/>
             </div>
         )

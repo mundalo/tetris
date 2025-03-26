@@ -1,10 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { generatePiece } from './Piece'
-
-interface Piece {
-    type: number;
-    tetrimino: number[][][];
-}
+import { Piece, generatePiece } from './Piece'
 
 interface QueueContextType {
     queue: Piece[];

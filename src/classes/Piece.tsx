@@ -1,4 +1,4 @@
-interface Piece {
+export interface Piece {
     type: number;
     tetrimino: number[][][];
 }

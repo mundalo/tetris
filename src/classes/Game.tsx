@@ -1,7 +1,7 @@
-import React, { /*useState,*/ useEffect } from 'react';
+import React, { /*useState,*/ useEffect, useRef } from 'react';
 import Player from './Player';
 import { useQueueContext } from './PieceQueue';
-import { getPieceColor } from './Piece';
+import { Piece, getPieceColor } from './Piece';
 //import socketServiceInstance from '../services/service';
 
 interface GameProps {
@@ -10,48 +10,31 @@ interface GameProps {
     room: string;
 }
 
-export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
-    const { getPiece } = useQueueContext();
-    //var players = 2;
-    var rotate = 0;
-    enum Piece_indx {
-        coordinates,
-        nbr
-    };
+interface PlayerInfo {
+    container: Element;
+    rotation: number;
+    pieceIndx: number;
+    piece: Piece;
+    x: number;
+    y: number;
+    getPiece: (i: number) => Piece | null;
+}
 
-    useEffect(() => {
-        /*const updateStateText = (state) => {
-            const button = document.getElementById("state_btn");
-            button.innerHTML = state;
-        }
-        
-        console.log(`GameStarted updated to: ${gameStarted}`);
-        const button = document.getElementById("state_btn");
-        if (gameStarted === true) {
-            if (button.innerHTML === "Start Game" || button.innerHTML === "Resume") {
-                updateStateText("Pause");
-            }
-        } else if (gameStarted === false) {
-            if (button.innerHTML !== "Start Game") {
-                updateStateText("Resume");
-            }
-        } *//*else if (gameStarted === true) {
-            updateStateText("Start");
-        }*/
-        /*socketServiceInstance.connect(room, playerName);
+class GameLogic {
+    playerInfo: PlayerInfo;
 
-        return () => {
-            socketServiceInstance.disconnect();
-        };*/
-    }, [gameState, room, playerName]);
+    constructor(playerInfo: PlayerInfo) {
+        this.playerInfo = playerInfo; 
+    }
 
-    const isPieceWithinBoundary = (piece, x, y, grid) => {
+    isPieceWithinBoundary(piece: Piece["tetrimino"], x: number, y: number, grid) {
         let n = 10 - 4;
         let k = x + (y * 10);
 
-        for (let i = 0; i < piece[rotate][Piece_indx.coordinates].length; i++) {
-            for (let j = 0; j < piece[i].length; j++) {
-                if (piece[i][j] === 1) {
+        console.log("select piece: ", piece[this.playerInfo.rotation]);
+        for (let i = 0; i < piece[this.playerInfo.rotation].length; i++) {
+            for (let j = 0; j < piece[this.playerInfo.rotation][i].length; j++) {
+                if (piece[this.playerInfo.rotation][i][j] === 1) {
                     console.log("Piece at i: ", i, " j: ", j, " === 1");
                     if (k % 10 === 0 || k > 200) {
                         console.log("k: ", k, " is not within valid bounds");
@@ -73,7 +56,7 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
         return true;
     }
 
-    const putPiece = (piece, color, x, y, grid) => {
+    putPiece(piece, color: Piece["type"], x: number, y: number, grid) {
         let n = 10 - 4;
         let k = x + (y * 10);
 
@@ -89,7 +72,7 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
         }
     }
 
-    const removePiece = (piece, x, y, grid) => {
+    removePiece(piece, x: number, y: number, grid) {
         let n = 10 - 4;
         let k = x + (y * 10);
 
@@ -105,20 +88,20 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
         }
     }
 
-    const replacePiece = (currentPiece, color, x, y, grid) => {
+    replacePiece(currentPiece: Piece["tetrimino"], color: Piece["type"], x: number, y: number, grid) {
         if (y > 0) {
-            removePiece(currentPiece[rotate - 1], x - 1, y - 1, grid);
+            this.removePiece(currentPiece[this.playerInfo.rotation - 1], x - 1, y - 1, grid);
         }
-        putPiece(currentPiece[rotate], color, x, y, grid);
+        this.putPiece(currentPiece[this.playerInfo.rotation], color, x, y, grid);
     }
 
-    /*const setPieceAsBlocked = (currentPiece, x, y, grid) => {
+    setPieceAsBlocked(currentPiece: Piece["tetrimino"], x: number, y: number, grid) {
         let n = 10 - 4;
         let k = x + (y * 10);
 
-        for (let i = 0; i < currentPiece[rotate].length; i++) {
-            for (let j = 0; j < currentPiece[rotate][i].length; j++) {
-                if (currentPiece[rotate][i][j] === 1) {
+        for (let i = 0; i < currentPiece[this.playerInfo.rotation].length; i++) {
+            for (let j = 0; j < currentPiece[this.playerInfo.rotation][i].length; j++) {
+                if (currentPiece[this.playerInfo.rotation][i][j] === 1) {
                     grid[k].classList.add("blocked");
                 }
                 k++;
@@ -126,73 +109,83 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
             k += n;
         }
     }
-*/
-    const movePiece = (i, moveX = 0) => {
-        const container = document.getElementsByClassName("container-of-player-" + i);
-        const player = document.getElementsByClassName("player-grid-" + i);
-        const pieceIndex = Number(player[0].getAttribute("piece_index"));
-        const piece = getPiece(pieceIndex);
-        const currentPiece = piece.tetrimino;
-        const color = piece.type;
 
-        console.log("currentPiece: ", currentPiece);
-        if (container[0]) {
-            const grid = container[0].getElementsByClassName("grid-item");
-            const x = Number(player[0].getAttribute("data-x")) + moveX;
-            const y = Number(player[0].getAttribute("data-y"));
-            console.log("x: ", x, "y: ", y);
+    movePiece(moveX = 0) {
+        console.log("currentPiece: ", this.playerInfo.piece["tetrimino"], "type: ", this.playerInfo.piece.type);
+        if (this.playerInfo.container) {
+            const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+            const newX = this.playerInfo.x + moveX;
 
-            if (isPieceWithinBoundary(currentPiece, x, y, grid)) {
-                console.log("piece is within boundary put piece x", x, "y ", y);
-                replacePiece(currentPiece, color, x, y, grid);
+            if (this.isPieceWithinBoundary(this.playerInfo.piece.tetrimino, newX, this.playerInfo.y, grid)) {
+                console.log("piece is within boundary put piece x", newX, "y ", this.playerInfo.y);
+                this.replacePiece(this.playerInfo.piece.tetrimino, this.playerInfo.piece.type, newX, this.playerInfo.y, grid);
                 // needs to be set into a timer that changes each second player[0].setAttribute("y", y + 1);
                 return true;
             } else {
                 // if player reached bottom of board (cannot move further down change active piece of player)
                 return false;
-                    
-    
             }
         }
     }
 
-    /*const startGame = () => {
-        //socketServiceInstance.emit('start-game', { playerName });
-        updateStateText("Pause")
-
-        for (let i = 1; i <= players; i++) {
-            if (!movePiece(i)) {
-                console.log("could not move piece further down. Sets the piece as blocked and picks new piece for player");
-                const container = document.getElementsByClassName("container-of-player-" + i);
-                const player = document.getElementsByClassName("player-grid-" + i);
-                const pieceIndex = Number(player[0].getAttribute("piece_index"));
-                const piece = getPiece(pieceIndex);
-                const currentPiece = piece.tetrimino;
-                if (container[0]) {
-                    const grid = container[0].getElementsByClassName("grid-item");
-                    const x = Number(player[0].getAttribute("data-x"));
-                    const y = Number(player[0].getAttribute("data-y"));
-                    console.log("x: ", x, "y: ", y);
-                    setPieceAsBlocked(currentPiece, x, y, grid);
-                    const newPieceIndex = pieceIndex + 1
-                    player[0].setAttribute("piece_index", String(newPieceIndex));
-                }
+    startGame() {
+        if (!this.movePiece()) {
+            console.log("could not move piece further down. Sets the piece as blocked and picks new piece for player");
+            if (this.playerInfo.container) {
+                const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+                this.setPieceAsBlocked(this.playerInfo.piece.tetrimino, this.playerInfo.x, this.playerInfo.y, grid);
+                this.updatePiece();
             }
         }
-    }*/
+    }
+
+    updatePiece() {
+        this.playerInfo.pieceIndx += 1
+        this.playerInfo.piece = this.playerInfo.getPiece(this.playerInfo.pieceIndx);
+        this.playerInfo.rotation = 0;
+        this.playerInfo.x = 4;
+        this.playerInfo.y = 0;
+    }
+
+    rotatePiece() {
+        this.playerInfo.rotation = this.playerInfo.rotation + 1 === 4 ? 0 : this.playerInfo.rotation + 1;
+        this.movePiece();
+    }
+}
+
+export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
+    const { getPiece } = useQueueContext();
+    const playerData: PlayerInfo = {
+        container: document.getElementsByClassName("container-of-player-" + playerName)[0],
+        rotation: 0,
+        pieceIndx: 0,
+        piece: getPiece(0),
+        x: 4,
+        y: 0,
+        getPiece: getPiece
+      };
+    const gameLogicRef = useRef(new GameLogic(playerData));
+
+    useEffect(() => {
+        if (gameState === "Pause") {
+            console.log("Start game");
+            gameLogicRef.current.startGame();
+        } else if (gameState === "Start") {
+            console.log("Pause game");
+        }
+    }, [gameState, room, playerName]);
 
     const handleKeyPress = (e) => {
         console.log( "You pressed a key: ", e.keyCode );
         if (e.keyCode === 37) {
             console.log("left 37 - move piece left");
-            movePiece(1, -1);
+            gameLogicRef.current.movePiece(-1);
         } else if (e.keyCode === 38) {
-            rotate = rotate + 1 === 4 ? 0 : rotate + 1;
-            console.log(" up 38 - rotate clockwise rotation: ", rotate);
-            movePiece(1);
+            gameLogicRef.current.rotatePiece();
+            console.log(" up 38 - rotate clockwise rotation: ");
         } else if (e.keyCode === 39) {
             console.log("right 39 - move piece right");
-            movePiece(1, 1);
+            gameLogicRef.current.movePiece(1);
         } else if (e.keyCode === 40) {
             console.log("down 40");
             // make timer faster?
