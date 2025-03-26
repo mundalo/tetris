@@ -11,20 +11,22 @@ interface GameProps {
 }
 
 interface PlayerInfo {
+    name: string;
     container: Element;
     rotation: number;
     pieceIndx: number;
     piece: Piece;
     x: number;
     y: number;
-    getPiece: (i: number) => Piece | null;
 }
 
 class GameLogic {
     playerInfo: PlayerInfo;
+    getPiece: (i: number) => Piece | null;
 
-    constructor(playerInfo: PlayerInfo) {
-        this.playerInfo = playerInfo; 
+    constructor(playerInfo: PlayerInfo, getPiece: (i: number) => Piece | null) {
+        this.playerInfo = playerInfo;
+        this.getPiece = getPiece;
     }
 
     isPieceWithinBoundary(piece: Piece["tetrimino"], x: number, y: number, grid) {
@@ -111,6 +113,7 @@ class GameLogic {
     }
 
     movePiece(moveX = 0) {
+        console.log("Move Piece: ", this.playerInfo);
         console.log("currentPiece: ", this.playerInfo.piece["tetrimino"], "type: ", this.playerInfo.piece.type);
         if (this.playerInfo.container) {
             const grid = this.playerInfo.container.getElementsByClassName("grid-item");
@@ -129,6 +132,11 @@ class GameLogic {
     }
 
     startGame() {
+        this.playerInfo.container = document.getElementsByClassName("container-of-player-" + this.playerInfo.name)[0];
+        if (!this.playerInfo.piece) {
+            this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
+        }
+
         if (!this.movePiece()) {
             console.log("could not move piece further down. Sets the piece as blocked and picks new piece for player");
             if (this.playerInfo.container) {
@@ -141,7 +149,7 @@ class GameLogic {
 
     updatePiece() {
         this.playerInfo.pieceIndx += 1
-        this.playerInfo.piece = this.playerInfo.getPiece(this.playerInfo.pieceIndx);
+        this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
         this.playerInfo.rotation = 0;
         this.playerInfo.x = 4;
         this.playerInfo.y = 0;
@@ -156,17 +164,18 @@ class GameLogic {
 export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
     const { getPiece } = useQueueContext();
     const playerData: PlayerInfo = {
-        container: document.getElementsByClassName("container-of-player-" + playerName)[0],
+        name: playerName,
+        container: null,
         rotation: 0,
         pieceIndx: 0,
-        piece: getPiece(0),
+        piece: null,
         x: 4,
-        y: 0,
-        getPiece: getPiece
+        y: 0
       };
-    const gameLogicRef = useRef(new GameLogic(playerData));
+    const gameLogicRef = useRef<GameLogic | null>(null);
 
     useEffect(() => {
+        gameLogicRef.current = new GameLogic(playerData, getPiece);
         if (gameState === "Pause") {
             console.log("Start game");
             gameLogicRef.current.startGame();
