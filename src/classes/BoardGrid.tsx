@@ -21,7 +21,14 @@ class BoardGrid extends React.Component<BoardGridProps, BoardGridState> {
 
         // Create 10x20 grid items
         for (let i = 0; i < 10 * 20; i++) {
-            gridItems.push(<div key={i} data-row={Math.floor(i / 10)} data-column={i % 10} className="grid-item" data-piece={0}></div>);
+            gridItems.push(<div 
+                key={i} 
+                data-row={Math.floor(i / 10)} 
+                data-column={i % 10} 
+                className="grid-item" 
+                data-piece={0} 
+                style={{ backgroundColor: '#dfdfdf' }}
+            ></div>);
         }
 
         return (
