@@ -29,7 +29,7 @@ export const QueueProvider = ({ children }: QueueProviderProps): ReactNode => {
         if (i >= 0 && i < queue.length) {
             return queue[i];
         }
-        setSize(i + size);
+        setSize(i + 20 + size);
         return null;
     }
 

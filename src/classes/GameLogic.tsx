@@ -17,6 +17,7 @@ export class GameLogic {
     playerInfo: PlayerInfo;
     getPiece: (i: number) => Piece | null;
     interval: NodeJS.Timeout | string | number | undefined;
+    intervalDuration: number;
 
     constructor(playerInfo: PlayerInfo, getPiece: (i: number) => Piece | null) {
         this.playerInfo = playerInfo;
@@ -92,7 +93,7 @@ export class GameLogic {
 
     replacePiece(grid) {
         console.log("replacepiece: prevY: ", this.playerInfo.prevY, "prevX: ", this.playerInfo.prevX, "prevrotattion: ", this.playerInfo.prevRotation);
-        if (this.playerInfo.prevY >= 0 && this.playerInfo.prevX >= 0 && this.playerInfo.prevRotation >= 0) {
+        if (this.playerInfo.prevY >= 0) {
             this.removePiece(grid);
         }
         this.putPiece(grid);
@@ -147,11 +148,53 @@ export class GameLogic {
         }
     }
 
+    executeWithDecreasingInterval(
+        callback: () => void,
+        initialInterval: number,
+        decrement: number,
+        minInterval: number
+      ) {
+        let currentInterval = initialInterval;
+      
+        function execute() {
+          callback();
+      
+          currentInterval = Math.max(currentInterval - decrement, minInterval);
+          setTimeout(execute, currentInterval);
+        }
+      
+        setTimeout(execute, currentInterval);
+    }
+
+    startMovingPieces = () => {
+        if (!this.movePiece()) {
+            console.log("could not move piece further down.");
+            console.log("if no more pieces can be put at the top game is over");
+            if (this.playerInfo.prevY < 0) {
+                console.log("Game is Over");
+                this.stopGame();
+                alert("Game is over");
+                return;
+            }
+            console.log("Sets the piece as blocked and picks new piece for player");
+            this.checkIfValuesMissing();
+            const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+            this.setPieceAsBlocked(grid);
+            this.updatePiece();
+        } else {
+            this.playerInfo.y += 1;
+        }
+    }
+
     startGame() {
         this.playerInfo.container = document.getElementsByClassName("container-of-player-" + this.playerInfo.name)[0];
         if (!this.playerInfo.piece) {
             this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
         }
+
+        this.executeWithDecreasingInterval(this.startMovingPieces, 1000, 100, 200);
+        /*
+        let intervalDuration = 1000;
 
         this.interval = setInterval(() => {
             if (!this.movePiece()) {
@@ -171,7 +214,11 @@ export class GameLogic {
             } else {
                 this.playerInfo.y += 1;
             }
-        }, 1000); // Adjust the interval as needed (1000ms = 1 second)
+
+            intervalDuration = Math.max(100, intervalDuration - 50);
+            clearInterval(this.interval);
+            this.interval = setInterval(arguments.callee, intervalDuration);
+        }, intervalDuration);*/
     }
 
     stopGame() {
@@ -192,45 +239,83 @@ export class GameLogic {
 
     rotatePiece() {
         this.playerInfo.rotation = this.playerInfo.rotation + 1 === 4 ? 0 : this.playerInfo.rotation + 1;
-        this.movePiece();
+        if (!this.movePiece()) {
+            this.playerInfo.rotation = this.playerInfo.prevRotation;
+        }
     }
 
-    getPieceLen() {
+    getPieceWidth(): number {
         const piece = this.playerInfo.piece.tetrimino;
-        let len = 0;
+        let width = 0;
         for (let i = 0; i < piece[this.playerInfo.rotation].length; i++) {
-            const newLen = piece[this.playerInfo.rotation][i].lastIndexOf(1);
-            if (newLen > len) {
-                len = newLen;
+            const newWidth = piece[this.playerInfo.rotation][i].lastIndexOf(1);
+            if (newWidth > width) {
+                width = newWidth;
             }
         }
-        return len;
+        return width;
+    }
+
+    getPieceHeight(): number {
+        const piece = this.playerInfo.piece.tetrimino[this.playerInfo.rotation];
+        for (let i = piece.length - 1; i >= 0; i--) {
+            const hasValue = piece[i].includes(1);
+            if (hasValue) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    getPieceStartPos() {
+        const piece = this.playerInfo.piece.tetrimino[this.playerInfo.rotation];
+        let start = piece.length - 1;
+        for (let i = 0; i < piece.length; i++) {
+            const newStart = piece[i].find(elem => elem === 1);
+            if (newStart < start) {
+                start = newStart;
+            }
+        }
+        return start;
     }
 
     handleKeyPressEvent(e: React.KeyboardEvent<HTMLDivElement>) {
         console.log( "You pressed a key: ", e.keyCode );
+        e.preventDefault();
         switch (e.keyCode) {
             case 37:
                 console.log("left 37 - move piece left");
-                this.playerInfo.x = this.playerInfo.x - 1 < 0 ? 0 : this.playerInfo.x - 1;
-                this.movePiece();
+                this.playerInfo.x = this.playerInfo.x - 1 < (0 - this.getPieceStartPos()) ? 0 - this.getPieceStartPos() : this.playerInfo.x - 1;
+                if (!this.movePiece()) {
+                    this.playerInfo.x = this.playerInfo.prevX;
+                }
                 break;
             case 38:
                 this.rotatePiece();
                 console.log(" up 38 - rotate clockwise rotation: ");
                 break;
             case 39:
-                console.log("right 39 - move piece right, ", (9 - this.getPieceLen()));
-                this.playerInfo.x = this.playerInfo.x + 1 > (9 - this.getPieceLen())  ? 9 - this.getPieceLen() : this.playerInfo.x + 1;
-                this.movePiece();
+                console.log("right 39 - move piece right, ", (9 - this.getPieceWidth()));
+                this.playerInfo.x = this.playerInfo.x + 1 > (9 - this.getPieceWidth()) ? 9 - this.getPieceWidth() : this.playerInfo.x + 1;
+                if (!this.movePiece()) {
+                    this.playerInfo.x = this.playerInfo.prevX;
+                }
                 break;
             case 40:
-                console.log("down 40");
+                console.log("down 40", this.playerInfo.y);
                 // make timer faster?
+                this.playerInfo.y = this.playerInfo.y + 1 > (19 - this.getPieceHeight()) ? 19 - this.getPieceHeight() : this.playerInfo.x + 1;
+                console.log("down 40", this.playerInfo.y);
+                this.movePiece();
                 break;
             case 32:
                 console.log("space 32");
-                // move piece to bottom
+                while (!this.movePiece()) {
+                    this.checkIfValuesMissing();
+                    const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+                    this.setPieceAsBlocked(grid);
+                    this.updatePiece();
+                }
                 break;
             default:
                 break;
