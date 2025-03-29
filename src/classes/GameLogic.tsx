@@ -29,14 +29,9 @@ export class GameLogic {
         let k = this.playerInfo.x + (this.playerInfo.y * 10);
         const piece = this.playerInfo.piece.tetrimino;
 
-        console.log("select piece: ", piece[this.playerInfo.rotation]);
-        const row = grid[k].getAttribute("data-row");
-        const col = grid[k].getAttribute("data-column");
-
         for (let i = 0; i < piece[this.playerInfo.rotation].length; i++) {
             for (let j = 0; j < piece[this.playerInfo.rotation][i].length; j++) {
                 if (piece[this.playerInfo.rotation][i][j] === 1) {
-                    console.log("Piece at i: ", i, " j: ", j, " === 1");
 
                     if (k >= 200) {
                         console.log("k: ", k, " is not within valid bounds");
@@ -200,7 +195,7 @@ export class GameLogic {
             if (!this.movePiece()) {
                 console.log("could not move piece further down.");
                 console.log("if no more pieces can be put at the top game is over");
-                if (this.playerInfo.prevX < 0 || this.playerInfo.prevY < 0 || this.playerInfo.prevRotation < 0) {
+                if (this.playerInfo.prevY < 0) {
                     console.log("Game is Over");
                     this.stopGame();
                     alert("Game is over");
@@ -270,12 +265,14 @@ export class GameLogic {
     getPieceStartPos() {
         const piece = this.playerInfo.piece.tetrimino[this.playerInfo.rotation];
         let start = piece.length - 1;
+
         for (let i = 0; i < piece.length; i++) {
-            const newStart = piece[i].find(elem => elem === 1);
-            if (newStart < start) {
+            const newStart = piece[i].indexOf(1);
+            if (newStart !== -1 && newStart < start) {
                 start = newStart;
             }
         }
+
         return start;
     }
 
@@ -286,6 +283,8 @@ export class GameLogic {
             case 37:
                 console.log("left 37 - move piece left");
                 this.playerInfo.x = this.playerInfo.x - 1 < (0 - this.getPieceStartPos()) ? 0 - this.getPieceStartPos() : this.playerInfo.x - 1;
+                console.log("piece: ", this.playerInfo.piece.tetrimino, "rotation: ", this.playerInfo.rotation);
+                console.log("left 37 - move piece left", this.playerInfo.x, "before: ", this.playerInfo.prevX);
                 if (!this.movePiece()) {
                     this.playerInfo.x = this.playerInfo.prevX;
                 }
