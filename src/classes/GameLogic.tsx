@@ -161,6 +161,52 @@ export class GameLogic {
         setTimeout(execute, currentInterval);
     }
 
+    removeRow(k: number, grid) {
+        const prevRowX = k - 10;
+
+        if (prevRowX >= 0) {
+            let nothingToMove = 0;
+            console.log("removeRow");
+            // take above column and move down until there is a row with nothing to move
+            for (let j = 0; j < 10; j++) {
+                if (!grid[prevRowX + j].classList.contains("blocked")) {
+                    nothingToMove++;
+                    grid[k + j].classList.remove("blocked");
+                }
+                grid[k + j].setAttribute("data-piece", grid[prevRowX + j].getAttribute("data-piece"));
+                grid[k + j].style.backgroundColor = grid[prevRowX + j].style.backgroundColor;
+            }
+
+            if (nothingToMove !== 10) {
+                this.removeRow(prevRowX, grid);
+            }
+        }
+    }
+
+    checkIfRowIsBlocked() {
+        const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+        let k = this.playerInfo.prevY * 10;
+        const rowsToCheck = k + 40 > 199 ? 199 : k + 40;
+
+        console.log("checkIfRowIsBlocked: ", k, "rowsToCheck: ", rowsToCheck);
+        while (k < rowsToCheck) {
+            let columnsBlocked = 0;
+            for (let j = 0; j < 10; j++) {
+                if (grid[k + j].classList.contains("blocked")) {
+                    console.log("Is blocked K: ", k + j);
+                    columnsBlocked++;
+                } else {
+                    console.log("Is not blocked k: ", k + j, "classlist: ", grid[k + j].classList);
+                }
+            }
+            if (columnsBlocked === 10) {
+                console.log("columnsBlocked is fully blocked", columnsBlocked);
+                this.removeRow(k, grid);
+            }
+            k += 10;
+        }
+    }
+
     startMovingPieces = () => {
         if (!this.movePiece()) {
             console.log("could not move piece further down.");
@@ -168,13 +214,13 @@ export class GameLogic {
             if (this.playerInfo.prevY < 0) {
                 console.log("Game is Over");
                 this.stopGame();
-                alert("Game is over");
                 return;
             }
             console.log("Sets the piece as blocked and picks new piece for player");
             this.checkIfValuesMissing();
             const grid = this.playerInfo.container.getElementsByClassName("grid-item");
             this.setPieceAsBlocked(grid);
+            this.checkIfRowIsBlocked();
             this.updatePiece();
         } else {
             this.playerInfo.y += 1;
