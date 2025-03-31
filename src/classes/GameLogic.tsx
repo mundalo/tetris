@@ -166,8 +166,6 @@ export class GameLogic {
 
         if (prevRowX >= 0) {
             let nothingToMove = 0;
-            console.log("removeRow");
-            // take above column and move down until there is a row with nothing to move
             for (let j = 0; j < 10; j++) {
                 if (!grid[prevRowX + j].classList.contains("blocked")) {
                     nothingToMove++;
@@ -188,19 +186,15 @@ export class GameLogic {
         let k = this.playerInfo.prevY * 10;
         const rowsToCheck = k + 40 > 199 ? 199 : k + 40;
 
-        console.log("checkIfRowIsBlocked: ", k, "rowsToCheck: ", rowsToCheck);
         while (k < rowsToCheck) {
             let columnsBlocked = 0;
             for (let j = 0; j < 10; j++) {
                 if (grid[k + j].classList.contains("blocked")) {
-                    console.log("Is blocked K: ", k + j);
                     columnsBlocked++;
-                } else {
-                    console.log("Is not blocked k: ", k + j, "classlist: ", grid[k + j].classList);
                 }
             }
             if (columnsBlocked === 10) {
-                console.log("columnsBlocked is fully blocked", columnsBlocked);
+                console.log("Row is completely blocked : ", k);
                 this.removeRow(k, grid);
             }
             k += 10;
@@ -270,6 +264,10 @@ export class GameLogic {
     updatePiece() {
         this.playerInfo.pieceIndx += 1
         this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
+        while (!this.playerInfo.piece) {
+            this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
+        }    
+        console.log("updatePiece: ", this.playerInfo.pieceIndx, " piece: ", this.playerInfo.piece);
         this.playerInfo.rotation = 0;
         this.playerInfo.x = 4;
         this.playerInfo.y = 0;
