@@ -1,4 +1,5 @@
 import { Piece, getPieceColor } from './Piece';
+import socketServiceInstance from '../services/service';
 
 export interface PlayerInfo {
     name: string;
@@ -16,10 +17,10 @@ export interface PlayerInfo {
 export class GameLogic {
     playerInfo: PlayerInfo;
     getPiece: (i: number) => Piece | null;
-    interval: NodeJS.Timeout | string | number | undefined;
-    intervalDuration: number;
-    timeoutId: number | undefined;
-    downInterval: NodeJS.Timeout | null = null;
+    intervalId: NodeJS.Timeout | null = null;
+    currentInterval: number = 1000;
+    decrementInterval: number = 50;
+    minInterval: number = 100;
 
     constructor(playerInfo: PlayerInfo, getPiece: (i: number) => Piece | null) {
         this.playerInfo = playerInfo;
@@ -62,7 +63,6 @@ export class GameLogic {
         for (let i = 0; i < this.playerInfo.piece.tetrimino[this.playerInfo.rotation].length; i++) {
             for (let j = 0; j < this.playerInfo.piece.tetrimino[this.playerInfo.rotation][i].length; j++) {
                 if (this.playerInfo.piece.tetrimino[this.playerInfo.rotation][i][j] === 1) {
-
                     grid[k].style.backgroundColor = getPieceColor(this.playerInfo.piece.type);
                 }
                 k++;
@@ -104,7 +104,8 @@ export class GameLogic {
 
         for (let i = 0; i < currentPiece[this.playerInfo.rotation].length; i++) {
             for (let j = 0; j < currentPiece[this.playerInfo.rotation][i].length; j++) {
-                if (currentPiece[this.playerInfo.rotation][i][j] === 1 && k < 200 && k >= 0) {
+                if (currentPiece[this.playerInfo.rotation][i][j] === 1) {
+                    console.log("piece: ", this.playerInfo.piece, "i: ", i, "j: ", j, "K: ", k);
                     grid[k].classList.add("blocked");
                 }
                 k++;
@@ -146,16 +147,16 @@ export class GameLogic {
         decrement: number,
         minInterval: number
       ) {
-        let currentInterval = initialInterval;
-      
-        function execute() {
-          callback();
-      
-          currentInterval = Math.max(currentInterval - decrement, minInterval);
-          setTimeout(execute, currentInterval);
-        }
-      
-        setTimeout(execute, currentInterval);
+        let interval = initialInterval;
+        this.intervalId = setInterval(() => {
+            callback();
+            if (interval > minInterval) {
+                interval -= decrement;
+                clearInterval(this.intervalId!);
+                this.intervalId = setInterval(callback, interval);
+                this.currentInterval = interval;
+            }
+        }, interval);
     }
 
     removeRow(k: number, grid) {
@@ -167,6 +168,8 @@ export class GameLogic {
                 if (!grid[prevRowX + j].classList.contains("blocked")) {
                     nothingToMove++;
                     grid[k + j].classList.remove("blocked");
+                } else if (grid[prevRowX + j].classList.contains("blocked") && !grid[k + j].classList.contains("blocked")) {
+                    grid[k + j].classList.add("blocked");
                 }
                 grid[k + j].setAttribute("data-piece", grid[prevRowX + j].getAttribute("data-piece"));
                 grid[k + j].style.backgroundColor = grid[prevRowX + j].style.backgroundColor;
@@ -181,12 +184,12 @@ export class GameLogic {
     checkIfRowIsBlocked() {
         const grid = this.playerInfo.container.getElementsByClassName("grid-item");
         let k = this.playerInfo.prevY * 10;
-        const rowsToCheck = k + 40 > 199 ? 199 : k + 40;
+        const rowsToCheck = 199//k + 40 > 199 ? 199 : k + 40;
 
         while (k < rowsToCheck) {
             let columnsBlocked = 0;
             for (let j = 0; j < 10; j++) {
-                if (k + j >= 0 && k + j < 200 && grid[k + j].classList.contains("blocked")) {
+                if (grid[k + j].classList.contains("blocked")) {
                     columnsBlocked++;
                 }
             }
@@ -209,7 +212,7 @@ export class GameLogic {
         if (!this.movePiece()) {
             if (this.playerInfo.prevY < 0) {
                 console.log("Game is Over");
-                this.stopGame();
+                this.gameOver();
                 return;
             }
             this.prepareNewPiece();
@@ -224,13 +227,42 @@ export class GameLogic {
             this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
         }
 
-        this.executeWithDecreasingInterval(this.startMovingPieces, 1000, 50, 200);
+        this.executeWithDecreasingInterval(this.startMovingPieces, this.currentInterval, this.decrementInterval, this.minInterval);
     }
 
-    stopGame() {
-        console.log("stop game");
-        clearInterval(this.interval);
-        this.interval = null;
+    clearGameInterval() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+    }
+
+    gameOver() {
+        console.log("Game Over");
+        this.clearGameInterval();
+        alert("Game Over! You Lost!");
+        // reset all values
+        const grid = this.playerInfo.container.getElementsByClassName("grid-item");
+        for (let i = 0; i < grid.length; i++) {
+            const item = grid[i] as HTMLElement;
+            item.classList.remove("blocked");
+            item.style.backgroundColor = getPieceColor(0);
+            item.setAttribute("data-piece", "0");
+        }
+        this.playerInfo.rotation = 0;
+        this.playerInfo.pieceIndx = 0;
+        this.playerInfo.piece = null;
+        this.playerInfo.x = 4;
+        this.playerInfo.y = 0;
+        this.playerInfo.prevX = -1;
+        this.playerInfo.prevY = -1;
+        this.playerInfo.prevRotation = -1;
+        socketServiceInstance.emit('game-started', { gameState: 'Game Over' });
+    }
+
+    pauseGame() {
+        console.log("Game has been paused");
+        this.clearGameInterval();
     }
 
     updatePiece() {
@@ -318,17 +350,12 @@ export class GameLogic {
                 }
                 break;
             case 40:
-                if (!this.downInterval) {
-                    this.downInterval = setInterval(() => {
-                        this.playerInfo.y += 1;
-                        console.log("down interval", this.playerInfo.y);
-    
-                        if (!this.movePiece()) {
-                            this.prepareNewPiece();
-                            clearInterval(this.downInterval); // stop the interval once the piece reaches the bottom
-                            this.downInterval = null; // reset the interval
-                        }
-                    }, 100); // delay between moves (100ms, adjust as needed)
+                this.clearGameInterval();
+                this.playerInfo.y += 1;
+                console.log("down interval", this.playerInfo.y);
+
+                if (!this.movePiece()) {
+                    this.prepareNewPiece();
                 }
                 break;
             case 32:
@@ -344,9 +371,10 @@ export class GameLogic {
     }
 
     handleKeyUpEvent(e: React.KeyboardEvent<HTMLDivElement>) {
-        if (e.keyCode === 40 && this.downInterval) {
-            clearInterval(this.downInterval);
-            this.downInterval = null;
+        console.log("key up event, ", e.keyCode);
+        if (e.keyCode === 40) {
+            console.log("key up event 40 - startGame");
+            this.executeWithDecreasingInterval(this.startMovingPieces, this.currentInterval, this.decrementInterval, this.minInterval);
         }
     }
 }

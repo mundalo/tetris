@@ -38,6 +38,7 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
     useEffect(() => {
         if (gameState === "Start" && gameLogicRef.current) {
             console.log('Game paused');
+            gameLogicRef.current.pauseGame();
         } else if (gameState === "Pause" && gameLogicRef.current) {
             gameLogicRef.current.startGame();
         }
@@ -46,7 +47,8 @@ export const Game: React.FC<GameProps> = ({ gameState, playerName, room }) => {
     return (
         <div 
             className="App" 
-            onKeyDown={(e) => gameLogicRef.current?.handleKeyPressEvent(e)} 
+            onKeyDown={(e) => gameLogicRef.current?.handleKeyPressEvent(e)}
+            onKeyUp={(e) => gameLogicRef.current?.handleKeyUpEvent(e)}
             tabIndex={0}
         >
             <div className="board">
