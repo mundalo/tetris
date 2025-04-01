@@ -19,7 +19,7 @@ export class GameLogic {
     getPiece: (i: number) => Piece | null;
     intervalId: NodeJS.Timeout | null = null;
     currentInterval: number = 1000;
-    decrementInterval: number = 50;
+    decrementInterval: number = 100;
     minInterval: number = 100;
 
     constructor(playerInfo: PlayerInfo, getPiece: (i: number) => Piece | null) {
@@ -118,7 +118,7 @@ export class GameLogic {
         if (!this.playerInfo.container) {
             this.playerInfo.container = document.getElementsByClassName("container-of-player-" + this.playerInfo.name)[0];
         }
-        if (!this.playerInfo.piece) {
+        while (!this.playerInfo.piece) {
             this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
         }
     }
@@ -223,7 +223,7 @@ export class GameLogic {
 
     startGame() {
         this.playerInfo.container = document.getElementsByClassName("container-of-player-" + this.playerInfo.name)[0];
-        if (!this.playerInfo.piece) {
+        while (!this.playerInfo.piece) {
             this.playerInfo.piece = this.getPiece(this.playerInfo.pieceIndx);
         }
 
@@ -326,24 +326,18 @@ export class GameLogic {
     }
 
     handleKeyPressEvent(e: React.KeyboardEvent<HTMLDivElement>) {
-        console.log( "You pressed a key: ", e.keyCode );
         e.preventDefault();
         switch (e.keyCode) {
             case 37:
-                console.log("left 37 - move piece left");
                 this.playerInfo.x = this.playerInfo.x - 1 < (0 - this.getPieceStartPos()) ? 0 - this.getPieceStartPos() : this.playerInfo.x - 1;
-                console.log("piece: ", this.playerInfo.piece.tetrimino, "rotation: ", this.playerInfo.rotation);
-                console.log("left 37 - move piece left", this.playerInfo.x, "before: ", this.playerInfo.prevX);
                 if (!this.movePiece()) {
                     this.playerInfo.x = this.playerInfo.prevX;
                 }
                 break;
             case 38:
                 this.rotatePiece();
-                console.log(" up 38 - rotate clockwise rotation: ");
                 break;
             case 39:
-                console.log("right 39 - move piece right, ", (9 - this.getPieceWidth()));
                 this.playerInfo.x = this.playerInfo.x + 1 > (9 - this.getPieceWidth()) ? 9 - this.getPieceWidth() : this.playerInfo.x + 1;
                 if (!this.movePiece()) {
                     this.playerInfo.x = this.playerInfo.prevX;
@@ -352,14 +346,12 @@ export class GameLogic {
             case 40:
                 this.clearGameInterval();
                 this.playerInfo.y += 1;
-                console.log("down interval", this.playerInfo.y);
-
+                
                 if (!this.movePiece()) {
                     this.prepareNewPiece();
                 }
                 break;
             case 32:
-                console.log("space 32");
                 while (this.movePiece()) {
                     this.playerInfo.y += 1;
                 }
@@ -371,9 +363,7 @@ export class GameLogic {
     }
 
     handleKeyUpEvent(e: React.KeyboardEvent<HTMLDivElement>) {
-        console.log("key up event, ", e.keyCode);
         if (e.keyCode === 40) {
-            console.log("key up event 40 - startGame");
             this.executeWithDecreasingInterval(this.startMovingPieces, this.currentInterval, this.decrementInterval, this.minInterval);
         }
     }
