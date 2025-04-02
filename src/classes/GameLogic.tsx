@@ -184,7 +184,7 @@ export class GameLogic {
     checkIfRowIsBlocked() {
         const grid = this.playerInfo.container.getElementsByClassName("grid-item");
         let k = this.playerInfo.prevY * 10;
-        const rowsToCheck = 199//k + 40 > 199 ? 199 : k + 40;
+        const rowsToCheck = k + 40 > 199 ? 199 : k + 40;
 
         while (k < rowsToCheck) {
             let columnsBlocked = 0;
@@ -281,6 +281,12 @@ export class GameLogic {
 
     rotatePiece() {
         this.playerInfo.rotation = this.playerInfo.rotation + 1 === 4 ? 0 : this.playerInfo.rotation + 1;
+        if (this.playerInfo.x + this.getPieceWidth() > 9) {
+            this.playerInfo.x = 9 - this.getPieceWidth();
+        } else if (this.playerInfo.x < 0 - this.getPieceStartPos()) {
+            this.playerInfo.x = 0 - this.getPieceStartPos();
+        }
+
         if (!this.movePiece()) {
             this.playerInfo.rotation = this.playerInfo.prevRotation;
         }

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Piece, generatePiece } from './Piece'
 
 interface QueueContextType {
@@ -22,22 +22,24 @@ interface QueueProviderProps {
 }
 
 export const QueueProvider = ({ children }: QueueProviderProps): ReactNode => {
-    const [queue, setQueue] = useState<Piece[]>([]);
-    const [size, setSize] = useState<number>(20);
+    const queue: Piece[] = [];
 
     const getPiece = (i: number): Piece | null => {
         if (i >= 0 && i < queue.length) {
             return queue[i];
         }
-        if (i + 5 >= queue.length) {
-            setSize(i + 100);
+        console.log("queue is smaller than index i: ", i);
+        if (i >= queue.length) {
+            console.log("set new size: ", i + 100);
+            generateMorePieces(i + 100);
         }
         return null;
     }
 
     const removePiece = (): void => {
         if (queue.length > 0) {
-            setQueue((prevQueue) => prevQueue.slice(1));
+            console.log("remove piece from queue: ", queue[0]);
+            queue.slice(1);
         }
     }
 
@@ -48,7 +50,7 @@ export const QueueProvider = ({ children }: QueueProviderProps): ReactNode => {
         arr.every((subArr: any) => Array.isArray(subArr) && subArr.every((el: any) => typeof el === "number")));
     }
 
-    const generateMorePieces = useCallback((requiredSize: number) => {
+    const generateMorePieces = (requiredSize: number) => {
         const piecesToGenerate = requiredSize - queue.length;
         if (piecesToGenerate > 0) {
             const newPieces = [];
@@ -59,30 +61,11 @@ export const QueueProvider = ({ children }: QueueProviderProps): ReactNode => {
                 }
             }
             if (newPieces.length > 0) {
-                setQueue((prevQueue) => [...prevQueue, ...newPieces]);
+                queue.push(...newPieces);
+                console.log("New pieces added to queue: ", newPieces);
             }
         }
-    }, [queue.length]);
-
-    /*useEffect(() => {
-        console.log("useEffect queue.lenght: ", queue.length, "size: ", size + 20);
-        if (queue.length <= size + 20) {
-            console.log("queue length < size - generate new piece");
-            const newPiece = generatePiece();
-            if (isPiece(newPiece)) {
-                return setQueue((prevQueue) => [...prevQueue, newPiece]);
-            }
-        }
-    }, [size, queue.length]);
-*/
-    useEffect(() => {
-        console.log("useEffect - queue length: ", queue.length, " size: ", size);
-        // Only generate more pieces if the queue has fewer pieces than we need
-        if (queue.length <= size + 20) {
-            console.log("Generating more pieces...");
-            generateMorePieces(size + 100);  // Ensure enough pieces are in the queue
-        }
-    }, [queue.length, size, generateMorePieces]);
+    };
 
     return (
         <QueueContext.Provider value={{ queue, getPiece, removePiece }}>
