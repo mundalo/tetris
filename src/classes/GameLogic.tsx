@@ -36,7 +36,7 @@ export class GameLogic {
             for (let j = 0; j < piece[this.playerInfo.rotation][i].length; j++) {
                 if (piece[this.playerInfo.rotation][i][j] === 1) {
 
-                    if (k >= 200) {
+                    if (k > 0 && k >= 200) {
                         console.log("k: ", k, " is not within valid bounds");
                         return false;
                     }
@@ -210,7 +210,7 @@ export class GameLogic {
 
     startMovingPieces = () => {
         if (!this.movePiece()) {
-            if (this.playerInfo.prevY < 0) {
+            if (this.playerInfo.prevY <= 0) {
                 console.log("Game is Over");
                 this.gameOver();
                 return;
